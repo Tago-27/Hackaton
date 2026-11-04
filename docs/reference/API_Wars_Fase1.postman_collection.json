@@ -1,0 +1,1393 @@
+{
+  "info": {
+    "_postman_id": "48b85ffb-decd-4daa-9557-ef011a3d90aa",
+    "name": "API Wars - Conciertos - Fase 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Fase 1: contratos y solicitudes manuales. Verificados contra documentacion oficial al 2026-11-04. No se ejecutaron llamadas con credenciales. No contiene secretos. Factus V2 + Factus Pay V1 /auth separado. Discovery NO vende entradas; FX Free diario; cobro COP; todo Sandbox. No implementar fases 2/3 aun. Leer FASE1_GUIA.md. NO ejecutar toda la coleccion en Runner: autenticacion Pay revoca el token previo y el pago requiere simulador humano."
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "try {",
+          "  const url = pm.variables.replaceIn(pm.request.url.toString());",
+          "  const host = url.split(\"/\")[2];",
+          "  const proveedores = [\"app.ticketmaster.com\", \"v6.exchangerate-api.com\", \"api-sandbox.factus.com.co\", \"pay-api-sandbox.factus.com.co\"];",
+          "  const gateway = String(pm.environment.get(\"gateway_base\") || \"\").replace(/\\/$/, \"\");",
+          "  if (proveedores.indexOf(host) === -1 && !(gateway && (url === gateway || url.startsWith(gateway + \"/\")))) {",
+          "    throw new Error(\"Host no autorizado. Esta coleccion solo permite Sandbox y el gateway configurado.\");",
+          "  }",
+          "  if (proveedores.indexOf(host) !== -1) {",
+          "    const ahora = Date.now();",
+          "    const bloqueo = Number(pm.environment.get(\"cooldown_\" + host) || 0);",
+          "    if (bloqueo > ahora) throw new Error(\"Proveedor en cooldown por HTTP 429. Espera \" + Math.ceil((bloqueo - ahora) / 1000) + \" segundos\");",
+          "    if (host === \"api-sandbox.factus.com.co\" && url.indexOf(\"/oauth/token\") === -1) {",
+          "      const expira = Number(pm.environment.get(\"factus_expires_at_ms\") || 0);",
+          "      if (expira && ahora + 5000 >= expira) throw new Error(\"Token Factus por expirar: ejecuta renovar token\");",
+          "    }",
+          "    const ultima = Number(pm.environment.get(\"ultima_\" + host) || 0);",
+          "    const espera = Math.max(0, 1000 - (ahora - ultima));",
+          "    pm.environment.set(\"ultima_\" + host, String(ahora + espera));",
+          "    if (espera > 0) setTimeout(function () {}, espera);",
+          "  }",
+          "} catch (error) {",
+          "  console.error(\"Solicitud detenida:\", error.message);",
+          "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+          "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+          "  throw error;",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "try {",
+          "  const url = pm.variables.replaceIn(pm.request.url.toString());",
+          "  const host = url.split(\"/\")[2];",
+          "  if (pm.response.code === 429) {",
+          "    const cabecera = pm.response.headers.get(\"Retry-After\");",
+          "    const segundos = Number(cabecera);",
+          "    let espera = cabecera && Number.isFinite(segundos) && segundos >= 0 ? segundos * 1000 : Date.parse(cabecera || \"\") - Date.now();",
+          "    if (!Number.isFinite(espera) || espera < 0) espera = 60000;",
+          "    pm.environment.set(\"cooldown_\" + host, String(Date.now() + espera));",
+          "    if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+          "    console.warn(\"429: se detiene el flujo. Esperar Retry-After; no crear otra referencia de pago.\");",
+          "  }",
+          "  pm.test(\"HTTP exitoso\", function () { pm.expect(pm.response.code).to.be.within(200,299); });",
+          "  if (pm.response.code >= 400 && pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+          "} catch (error) {",
+          "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+          "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Autenticacion manual",
+      "item": [
+        {
+          "name": "Factus - obtener token (manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{factus_base}}/oauth/token",
+            "description": "OAuth2 password grant. Introducir credenciales en valores locales. No enviar JSON. Se respeta expires_in de la respuesta: la documentacion muestra duraciones diferentes. No ejecutar continuamente.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{factus_client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{factus_client_secret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{factus_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{factus_password}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"factus_client_id\") || \"\").trim()) throw new Error(\"Completa factus_client_id en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_client_secret\") || \"\").trim()) throw new Error(\"Completa factus_client_secret en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_username\") || \"\").trim()) throw new Error(\"Completa factus_username en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_password\") || \"\").trim()) throw new Error(\"Completa factus_password en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.access_token || !datos.refresh_token || !Number.isFinite(Number(datos.expires_in)) || Number(datos.expires_in) <= 0) throw new Error(\"Respuesta OAuth incompleta\");",
+                  "  pm.environment.set(\"factus_access_token\", datos.access_token);",
+                  "  pm.environment.set(\"factus_refresh_token\", datos.refresh_token);",
+                  "  pm.environment.set(\"factus_expires_at_ms\", String(Date.now() + Number(datos.expires_in) * 1000));",
+                  "  pm.test(\"OAuth Factus con expiracion informada\", function () { pm.expect(datos.token_type.toLowerCase()).to.eql(\"bearer\"); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Factus - renovar token (manual si expiro)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{factus_access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{factus_base}}/oauth/token",
+            "description": "Renovar solo cuando corresponda. Guardar tambien el refresh_token nuevo. No repetir simultaneamente desde varios procesos.",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{factus_client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{factus_client_secret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{factus_refresh_token}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"factus_client_id\") || \"\").trim()) throw new Error(\"Completa factus_client_id en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_client_secret\") || \"\").trim()) throw new Error(\"Completa factus_client_secret en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_refresh_token\") || \"\").trim()) throw new Error(\"Completa factus_refresh_token en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.access_token || !datos.refresh_token || !Number.isFinite(Number(datos.expires_in)) || Number(datos.expires_in) <= 0) throw new Error(\"Respuesta OAuth incompleta\");",
+                  "  pm.environment.set(\"factus_access_token\", datos.access_token);",
+                  "  pm.environment.set(\"factus_refresh_token\", datos.refresh_token);",
+                  "  pm.environment.set(\"factus_expires_at_ms\", String(Date.now() + Number(datos.expires_in) * 1000));",
+                  "  pm.test(\"OAuth Factus con expiracion informada\", function () { pm.expect(datos.token_type.toLowerCase()).to.eql(\"bearer\"); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Factus Pay - obtener token (un responsable)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{pay_base}}/auth",
+            "description": "La documentacion vigente usa email/password en /auth (sin /v1). Devuelve {token}. Cada autenticacion revoca el token anterior de ese usuario; un responsable coordina el token. No incluir esta solicitud en ejecuciones repetidas del Runner. No usa el client_id/client_secret OAuth de Factus.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{pay_email}}\",\n  \"password\": \"{{pay_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"pay_email\") || \"\").trim()) throw new Error(\"Completa pay_email en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"pay_password\") || \"\").trim()) throw new Error(\"Completa pay_password en valores locales del entorno\");",
+                  "  if (pm.environment.get(\"pay_token\") && pm.environment.get(\"pay_rotate_token\") !== \"true\") {",
+                  "    throw new Error(\"Ya tienes pay_token. Reutilizalo; /auth revoca el anterior. Para rotar de forma deliberada usa pay_rotate_token=true.\");",
+                  "  }",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.token || typeof datos.token !== \"string\") throw new Error(\"No se recibio token de Factus Pay\");",
+                  "  pm.environment.set(\"pay_token\", datos.token);",
+                  "  pm.environment.set(\"pay_rotate_token\", \"false\");",
+                  "  pm.test(\"Token de Pay recibido\", function () { pm.expect(datos.token).to.be.a(\"string\").and.not.empty; });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Ticketmaster Discovery",
+      "item": [
+        {
+          "name": "Ticketmaster - buscar conciertos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{tm_base}}/events.json?apikey={{tm_api_key}}&classificationName=music&countryCode={{tm_country}}&size=5&page=0&sort=date,asc",
+            "description": "Discovery consulta eventos y rangos orientativos, no reserva ni compra boletos. Se comienza por US para explorar; CO puede no devolver eventos. Nunca inferir inventario vendible ni derechos comerciales a partir de priceRanges."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"tm_api_key\") || \"\").trim()) throw new Error(\"Completa tm_api_key en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  const eventos = datos._embedded && datos._embedded.events || [];",
+                  "  pm.environment.unset(\"tm_event_id\");",
+                  "  pm.environment.unset(\"tm_reference_price\");",
+                  "  pm.environment.unset(\"tm_reference_currency\");",
+                  "  const conPrecio = eventos.find(function (e) {",
+                  "    return Array.isArray(e.priceRanges) && e.priceRanges.some(function(p) { return Number.isFinite(p.min) && p.min > 0 && p.currency; });",
+                  "  });",
+                  "  const elegido = conPrecio || eventos[0];",
+                  "  if (elegido) pm.environment.set(\"tm_event_id\", elegido.id);",
+                  "  if (conPrecio) {",
+                  "    const precio = conPrecio.priceRanges.find(function(p) { return Number.isFinite(p.min) && p.min > 0 && p.currency; });",
+                  "    pm.environment.set(\"tm_reference_price\", String(precio.min));",
+                  "    pm.environment.set(\"tm_reference_currency\", precio.currency);",
+                  "  }",
+                  "  pm.test(\"Respuesta de busqueda valida\", function () { pm.expect(datos.page).to.be.an(\"object\"); });",
+                  "  if (!eventos.length) console.warn(\"Sin resultados: cambia tm_country o elimina ese filtro. No inventar eventos.\");",
+                  "  if (eventos.length && !conPrecio) console.warn(\"No hay priceRanges publicos. Mostrar precio no disponible; no vender por cero.\");",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Ticketmaster - detalle del evento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{tm_base}}/events/{{tm_event_id}}.json?apikey={{tm_api_key}}",
+            "description": "tm_event_id se captura en la busqueda. En fase 2 preservaremos la moneda original y el enlace oficial del evento; los boletos demo pertenecen a nuestro catalogo, no al inventario Ticketmaster."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"tm_api_key\") || \"\").trim()) throw new Error(\"Completa tm_api_key en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"tm_event_id\") || \"\").trim()) throw new Error(\"Completa tm_event_id en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  pm.test(\"Evento identificado\", function () { pm.expect(datos.id).to.eql(pm.environment.get(\"tm_event_id\")); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - ExchangeRate",
+      "item": [
+        {
+          "name": "ExchangeRate - todas las tasas desde COP",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{fx_base}}/{{fx_api_key}}/latest/COP",
+            "description": "Una llamada obtiene todas las divisas: USD, EUR, GBP, MXN, CAD. El endpoint Standard funciona con el plan Free. El plan Free publica tasas una vez al dia (no cotizaciones tick a tick). Los importes mostrados se derivan del fixture COP; la fase 2 hara el mashup real. Cachear hasta time_next_update_unix; no consultar una vez por divisa ni por cada render. Revisar result y error-type incluso con HTTP 200."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"fx_api_key\") || \"\").trim()) throw new Error(\"Completa fx_api_key en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (datos.result !== \"success\") throw new Error(\"ExchangeRate: \" + (datos[\"error-type\"] || \"error desconocido\"));",
+                  "  if (datos.base_code !== \"COP\" || !datos.conversion_rates) throw new Error(\"Base o tasas invalidas\");",
+                  "  const monedas = [\"USD\", \"EUR\", \"GBP\", \"MXN\", \"CAD\"];",
+                  "  const montos = {};",
+                  "  const monto = Number(pm.environment.get(\"amount_cop\"));",
+                  "  if (!Number.isFinite(monto) || monto <= 0) throw new Error(\"amount_cop invalido\");",
+                  "  monedas.forEach(function(moneda) {",
+                  "    const tasa = datos.conversion_rates[moneda];",
+                  "    if (!Number.isFinite(tasa) || tasa <= 0) throw new Error(\"Falta tasa valida: \" + moneda);",
+                  "    montos[moneda] = (monto * tasa).toFixed(2);",
+                  "  });",
+                  "  pm.environment.set(\"fx_conversion_rates\", JSON.stringify(datos.conversion_rates));",
+                  "  pm.environment.set(\"fx_display_amounts\", JSON.stringify(montos));",
+                  "  pm.environment.set(\"fx_last_update_unix\", String(datos.time_last_update_unix));",
+                  "  pm.environment.set(\"fx_next_update_unix\", String(datos.time_next_update_unix));",
+                  "  pm.test(\"Cinco conversiones disponibles\", function () { pm.expect(Object.keys(montos)).to.have.lengthOf(5); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Factus Pay",
+      "item": [
+        {
+          "name": "Factus Pay - crear recaudo Sandbox",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{pay_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{pay_base}}/v1/collections",
+            "description": "Monto en COP, no centavos. reference_code es idempotente por empresa: repetir la MISMA referencia recupera el recaudo (200) o lo crea (201). No cambiar monto bajo una misma referencia. No regenerar reference_code en un reintento. Fixture independiente del precio Discovery: 119000 COP. Para un pedido nuevo borra order_reference y las evidencias anteriores. Abrir el simulador oficial y pagar solo este QR Sandbox.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference_code\": \"{{order_reference}}\",\n  \"amount\": \"{{amount_cop}}\",\n  \"expiration\": \"900\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"pay_token\") || \"\").trim()) throw new Error(\"Completa pay_token en valores locales del entorno\");",
+                  "  if (!pm.environment.get(\"order_reference\")) {",
+                  "    pm.environment.set(\"order_reference\", \"APIW-\" + pm.variables.replaceIn(\"{{$guid}}\"));",
+                  "    [\"pay_verified_reference\", \"pay_verified_amount\", \"pay_verified_at_ms\", \"factus_bill_number\", \"factus_cufe\"].forEach(function(k) { pm.environment.unset(k); });",
+                  "  }",
+                  "  const monto = Number(pm.environment.get(\"amount_cop\"));",
+                  "  if (!Number.isFinite(monto) || monto < 1000 || monto > 12100000) throw new Error(\"Monto fuera del rango Sandbox documentado\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.data || datos.data.reference_code !== pm.environment.get(\"order_reference\")) throw new Error(\"Referencia de recaudo inconsistente\");",
+                  "  if (Number(datos.data.amount).toFixed(2) !== Number(pm.environment.get(\"amount_cop\")).toFixed(2)) throw new Error(\"Monto de recaudo inconsistente\");",
+                  "  pm.environment.set(\"pay_status\", datos.data.status);",
+                  "  pm.environment.set(\"pay_qr\", datos.data.qr || \"\");",
+                  "  pm.environment.set(\"pay_breb_key\", datos.data.breb_key || \"\");",
+                  "  pm.test(\"Creado o recuperado sin duplicar\", function () { pm.expect([200,201]).to.include(pm.response.code); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Factus Pay - consultar y verificar pago",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{pay_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{pay_base}}/v1/collections/{{order_reference}}",
+            "description": "Esta consulta autenticada es la fuente para confirmar pago. No confiar en un paid enviado por frontend o mock. No usar polling agresivo. El script deja evidencia local para el ejercicio manual de Postman; el backend debera verificar de nuevo y persistir la transaccion en fase 3."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"pay_token\") || \"\").trim()) throw new Error(\"Completa pay_token en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"order_reference\") || \"\").trim()) throw new Error(\"Completa order_reference en valores locales del entorno\");",
+                  "  [\"pay_verified_reference\", \"pay_verified_amount\", \"pay_verified_at_ms\"].forEach(function(k) { pm.environment.unset(k); });",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.data || datos.data.reference_code !== pm.environment.get(\"order_reference\")) throw new Error(\"Referencia de pago no coincide\");",
+                  "  if (Number(datos.data.amount).toFixed(2) !== Number(pm.environment.get(\"amount_cop\")).toFixed(2)) throw new Error(\"Monto pagado no coincide\");",
+                  "  pm.environment.set(\"pay_status\", datos.data.status);",
+                  "  if (datos.data.status === \"paid\") {",
+                  "    pm.environment.set(\"pay_verified_reference\", datos.data.reference_code);",
+                  "    pm.environment.set(\"pay_verified_amount\", String(datos.data.amount));",
+                  "    pm.environment.set(\"pay_verified_at_ms\", String(Date.now()));",
+                  "  }",
+                  "  pm.test(\"Estado de recaudo reconocido\", function () { pm.expect([\"ready\",\"paid\"]).to.include(datos.data.status); });",
+                  "  if (datos.data.status !== \"paid\") console.warn(\"Pago aun no confirmado: no enviar la factura del flujo de cobro previo.\");",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Factus V2",
+      "item": [
+        {
+          "name": "Factus V2 - rangos activos de factura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{factus_access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{factus_base}}/v2/numbering-ranges?filter[document]=21&filter[is_active]=1",
+            "description": "El filtro document=21 corresponde al tipo Factura de Venta de la tabla de rangos, mientras document='01' es el tipo en la factura. No usar IDs fijos copiados de ejemplos. Si hay varios rangos activos se exige seleccion explicita."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"factus_access_token\") || \"\").trim()) throw new Error(\"Completa factus_access_token en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!Array.isArray(datos.data)) throw new Error(\"Se esperaba data[] en V2\");",
+                  "  const rangos = datos.data.filter(function(r) {",
+                  "    return !!r.is_active && !r.is_expired && !r.deleted_at && Number(r.current) < Number(r.to);",
+                  "  });",
+                  "  const configurado = String(pm.environment.get(\"numbering_range_id\") || \"\");",
+                  "  const seleccionado = rangos.find(function(r) { return String(r.id) === configurado; });",
+                  "  if (seleccionado) {",
+                  "    pm.environment.set(\"numbering_range_id\", String(seleccionado.id));",
+                  "  } else if (rangos.length === 1) {",
+                  "    pm.environment.set(\"numbering_range_id\", String(rangos[0].id));",
+                  "  } else {",
+                  "    pm.environment.unset(\"numbering_range_id\");",
+                  "    throw new Error(rangos.length ? \"Hay varios rangos: elige el correcto en numbering_range_id y repite esta consulta\" : \"No hay rango activo y utilizable. Revisar con el mentor\");",
+                  "  }",
+                  "  pm.test(\"Rango de factura seleccionado\", function () { pm.expect(pm.environment.get(\"numbering_range_id\")).to.match(/^\\d+$/); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Factus V2 - emitir factura tras pago verificado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{factus_access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{factus_base}}/v2/bills/validate",
+            "description": "Solo despues de GET del recaudo y status paid. Esquema V2: payment_details, identification_document_code y taxes. Cliente extranjero con pasaporte de prueba (41), pais US; no inventar municipio colombiano. Este fixture generico usa base100000 + IVA19%=119000 SOLO para probar JSON; no determina el tratamiento tributario de entradas de conciertos. Nunca declararlo como factura con validez fiscal de produccion. Repetir la referencia permite recuperar la factura procesada. Ante 409 o respuesta incierta, conciliar y revisar is_validated con un responsable; no borrar ni cambiar referencia automaticamente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference_code\": \"{{order_reference}}\",\n  \"document\": \"01\",\n  \"numbering_range_id\": {{numbering_range_id}},\n  \"operation_type\": \"10\",\n  \"send_email\": false,\n  \"observation\": \"API Wars: fixture financiero Sandbox. No es un boleto oficial de Ticketmaster.\",\n  \"payment_details\": [\n    {\n      \"payment_form\": \"1\",\n      \"payment_method_code\": \"47\",\n      \"reference_code\": \"{{order_reference}}\",\n      \"amount\": \"{{amount_cop}}\"\n    }\n  ],\n  \"customer\": {\n    \"identification_document_code\": \"41\",\n    \"identification\": \"AA1234567\",\n    \"names\": \"Ana Turista Demo\",\n    \"address\": \"100 Demo Street\",\n    \"email\": \"buyer@example.com\",\n    \"legal_organization_code\": \"2\",\n    \"tribute_code\": \"ZZ\",\n    \"country_code\": \"US\",\n    \"responsibilities\": [\n      \"R-99-PN\"\n    ]\n  },\n  \"items\": [\n    {\n      \"code_reference\": \"APIW-DEMO-SERVICE\",\n      \"name\": \"Servicio de demostracion API Wars - Sandbox\",\n      \"quantity\": \"1.00\",\n      \"price\": \"{{unit_price_cop}}\",\n      \"unit_measure_code\": \"94\",\n      \"standard_code\": \"999\",\n      \"taxes\": [\n        {\n          \"code\": \"01\",\n          \"rate\": \"{{tax_rate}}\"\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"factus_access_token\") || \"\").trim()) throw new Error(\"Completa factus_access_token en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"order_reference\") || \"\").trim()) throw new Error(\"Completa order_reference en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"numbering_range_id\") || \"\").trim()) throw new Error(\"Completa numbering_range_id en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"pay_verified_reference\") || \"\").trim()) throw new Error(\"Completa pay_verified_reference en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"pay_verified_amount\") || \"\").trim()) throw new Error(\"Completa pay_verified_amount en valores locales del entorno\");",
+                  "  if (!/^\\d+$/.test(String(pm.environment.get(\"numbering_range_id\")))) throw new Error(\"numbering_range_id debe ser un entero real del Sandbox\");",
+                  "  if (pm.environment.get(\"pay_verified_reference\") !== pm.environment.get(\"order_reference\")) throw new Error(\"Consulta primero el recaudo de esta orden y confirma paid\");",
+                  "  const total = Number(pm.environment.get(\"amount_cop\")).toFixed(2);",
+                  "  if (Number(pm.environment.get(\"pay_verified_amount\")).toFixed(2) !== total) throw new Error(\"Pago y factura no concilian\");",
+                  "  const totalFixture = (Number(pm.environment.get(\"unit_price_cop\")) * (1 + Number(pm.environment.get(\"tax_rate\")) / 100)).toFixed(2);",
+                  "  if (totalFixture !== total) throw new Error(\"Los valores del fixture no cuadran: base mas impuesto debe igualar amount_cop\");",
+                  "  if (Date.now() - Number(pm.environment.get(\"pay_verified_at_ms\") || 0) > 300000) throw new Error(\"Repite la consulta del pago para verificar el estado recientemente\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  if (!datos.data || datos.data.reference_code !== pm.environment.get(\"order_reference\")) throw new Error(\"Factura con referencia inesperada\");",
+                  "  if (datos.data.number) pm.environment.set(\"factus_bill_number\", datos.data.number);",
+                  "  if (datos.data.cufe) pm.environment.set(\"factus_cufe\", datos.data.cufe);",
+                  "  pm.environment.set(\"factus_is_validated\", String(datos.data.is_validated));",
+                  "  pm.test(\"Factura validada con CUFE\", function () {",
+                  "    pm.expect(datos.data.is_validated).to.eql(true);",
+                  "    pm.expect(datos.data.cufe).to.be.a(\"string\").and.not.empty;",
+                  "  });",
+                  "  if (datos.data.is_validated !== true) throw new Error(\"Factura aun pendiente de validacion: conservar orden pagada y conciliar\");",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Factus V2 - consultar factura por numero",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{factus_access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{factus_base}}/v2/bills/{{factus_bill_number}}",
+            "description": "El parametro es el numero devuelto como data.number, no la referencia ni un ID inventado. Para una emision cuyo resultado fue incierto, primero conciliar por la referencia original antes de crear otra."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (!String(pm.environment.get(\"factus_access_token\") || \"\").trim()) throw new Error(\"Completa factus_access_token en valores locales del entorno\");",
+                  "  if (!String(pm.environment.get(\"factus_bill_number\") || \"\").trim()) throw new Error(\"Completa factus_bill_number en valores locales del entorno\");",
+                  "} catch (error) {",
+                  "  console.error(\"Solicitud detenida:\", error.message);",
+                  "  if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "  throw error;",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  if (pm.response.code < 200 || pm.response.code >= 300) throw new Error(\"HTTP \" + pm.response.code + \": revisar respuesta\");",
+                  "  const datos = pm.response.json();",
+                  "  pm.test(\"Consulta de factura en JSON\", function () { pm.expect(datos).to.be.an(\"object\"); });",
+                  "} catch (error) {",
+                  "  pm.test(\"Script ejecutado sin errores\", function () { throw error; });",
+                  "  if (pm.execution && pm.execution.setNextRequest) pm.execution.setNextRequest(null);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Gateway contratos y mocks",
+      "item": [
+        {
+          "name": "Gateway - buscar eventos (contrato)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-name",
+                "value": "GW_EVENTS_OK"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{gateway_base}}/api/v1/events?country=CO&displayCurrency=USD",
+            "description": "CONTRATO AUN NO IMPLEMENTADO. Crear Mock Server desde esta coleccion y poner su URL en gateway_base. Estos ejemplos son exclusivamente sinteticos."
+          },
+          "event": [],
+          "response": [
+            {
+              "name": "GW_EVENTS_OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_EVENTS_OK"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/events?country=CO&displayCurrency=USD",
+                "description": "CONTRATO AUN NO IMPLEMENTADO. Crear Mock Server desde esta coleccion y poner su URL en gateway_base. Estos ejemplos son exclusivamente sinteticos."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"events\": [\n    {\n      \"id\": \"demo-concert-001\",\n      \"name\": \"Concierto de demostracion API Wars\",\n      \"isMock\": true,\n      \"saleMode\": \"sandbox_merchant_demo\",\n      \"ticketmasterEventId\": null,\n      \"priceSource\": \"merchant_demo_fixture\",\n      \"payable\": {\n        \"currency\": \"COP\",\n        \"amount\": \"119000.00\"\n      },\n      \"displayPrices\": {\n        \"USD\": \"28.00\",\n        \"EUR\": \"26.00\",\n        \"GBP\": \"22.00\",\n        \"MXN\": \"500.00\",\n        \"CAD\": \"38.00\"\n      },\n      \"fx\": {\n        \"isMock\": true,\n        \"asOf\": \"2026-11-04T00:00:00Z\"\n      }\n    }\n  ],\n  \"warnings\": [\n    \"Datos sinteticos para frontend. No son tasas ni precios actuales.\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gateway - cotizar (contrato)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-name",
+                "value": "GW_QUOTE_OK"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{gateway_base}}/api/v1/quotes",
+            "description": "El frontend envia IDs y cantidad, NO un precio a cobrar. El servidor calcula total con su catalogo de la promotora. Respuesta sintetica: no es una cotizacion comercial.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"demo-concert-001\",\n  \"ticketTypeId\": \"demo-general\",\n  \"quantity\": 1,\n  \"displayCurrency\": \"USD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [],
+          "response": [
+            {
+              "name": "GW_QUOTE_OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_QUOTE_OK"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/quotes",
+                "description": "El frontend envia IDs y cantidad, NO un precio a cobrar. El servidor calcula total con su catalogo de la promotora. Respuesta sintetica: no es una cotizacion comercial.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"eventId\": \"demo-concert-001\",\n  \"ticketTypeId\": \"demo-general\",\n  \"quantity\": 1,\n  \"displayCurrency\": \"USD\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"quoteId\": \"DEMO-QUOTE-001\",\n  \"expiresInSeconds\": 900,\n  \"payable\": {\n    \"currency\": \"COP\",\n    \"amount\": \"119000.00\"\n  },\n  \"display\": {\n    \"currency\": \"USD\",\n    \"amount\": \"28.00\",\n    \"isEstimate\": true,\n    \"fxIsMock\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gateway - crear orden (contrato)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "APIW-DEMO-001"
+              },
+              {
+                "key": "x-mock-response-name",
+                "value": "GW_ORDER_CREATED"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{gateway_base}}/api/v1/orders",
+            "description": "CONTRATO: sera protegido por autenticacion de nuestra app y por Idempotency-Key. No usar token de Factus/Pay en frontend. El mock no valida autenticacion, disponibilidad ni pagos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quoteId\": \"DEMO-QUOTE-001\",\n  \"customer\": {\n    \"documentType\": \"passport\",\n    \"documentNumber\": \"AA1234567\",\n    \"fullName\": \"Ana Turista Demo\",\n    \"country\": \"US\",\n    \"email\": \"buyer@example.com\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [],
+          "response": [
+            {
+              "name": "GW_ORDER_CREATED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "APIW-DEMO-001"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_ORDER_CREATED"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/orders",
+                "description": "CONTRATO: sera protegido por autenticacion de nuestra app y por Idempotency-Key. No usar token de Factus/Pay en frontend. El mock no valida autenticacion, disponibilidad ni pagos.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quoteId\": \"DEMO-QUOTE-001\",\n  \"customer\": {\n    \"documentType\": \"passport\",\n    \"documentNumber\": \"AA1234567\",\n    \"fullName\": \"Ana Turista Demo\",\n    \"country\": \"US\",\n    \"email\": \"buyer@example.com\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"orderId\": \"DEMO-ORDER-001\",\n  \"referenceCode\": \"APIW-DEMO-001\",\n  \"paymentStatus\": \"pending\",\n  \"invoiceStatus\": \"not_created\",\n  \"payable\": {\n    \"currency\": \"COP\",\n    \"amount\": \"119000.00\"\n  },\n  \"payment\": {\n    \"qr\": null,\n    \"isMock\": true\n  },\n  \"invoice\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gateway - consultar orden (contrato)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-name",
+                "value": "GW_ORDER_PENDING"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{gateway_base}}/api/v1/orders/DEMO-ORDER-001",
+            "description": "Cambiar x-mock-response-name para representar cada estado. En el backend este GET solo leera la DB; no consultara Factus en cada render. Requiere propiedad/autenticacion de la orden al implementarse."
+          },
+          "event": [],
+          "response": [
+            {
+              "name": "GW_ORDER_PENDING",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_ORDER_PENDING"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/orders/DEMO-ORDER-001",
+                "description": "Cambiar x-mock-response-name para representar cada estado. En el backend este GET solo leera la DB; no consultara Factus en cada render. Requiere propiedad/autenticacion de la orden al implementarse."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"orderId\": \"DEMO-ORDER-001\",\n  \"referenceCode\": \"APIW-DEMO-001\",\n  \"paymentStatus\": \"pending\",\n  \"invoiceStatus\": \"not_created\",\n  \"payable\": {\n    \"currency\": \"COP\",\n    \"amount\": \"119000.00\"\n  },\n  \"payment\": {\n    \"qr\": null,\n    \"isMock\": true\n  },\n  \"invoice\": null\n}"
+            },
+            {
+              "name": "GW_ORDER_PAID_INVOICE_PENDING",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_ORDER_PENDING"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/orders/DEMO-ORDER-001",
+                "description": "Cambiar x-mock-response-name para representar cada estado. En el backend este GET solo leera la DB; no consultara Factus en cada render. Requiere propiedad/autenticacion de la orden al implementarse."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"orderId\": \"DEMO-ORDER-001\",\n  \"referenceCode\": \"APIW-DEMO-001\",\n  \"paymentStatus\": \"paid\",\n  \"invoiceStatus\": \"pending\",\n  \"payable\": {\n    \"currency\": \"COP\",\n    \"amount\": \"119000.00\"\n  },\n  \"payment\": {\n    \"qr\": null,\n    \"isMock\": true\n  },\n  \"invoice\": null\n}"
+            },
+            {
+              "name": "GW_ORDER_COMPLETED",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_ORDER_PENDING"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/orders/DEMO-ORDER-001",
+                "description": "Cambiar x-mock-response-name para representar cada estado. En el backend este GET solo leera la DB; no consultara Factus en cada render. Requiere propiedad/autenticacion de la orden al implementarse."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"orderId\": \"DEMO-ORDER-001\",\n  \"referenceCode\": \"APIW-DEMO-001\",\n  \"paymentStatus\": \"paid\",\n  \"invoiceStatus\": \"validated\",\n  \"payable\": {\n    \"currency\": \"COP\",\n    \"amount\": \"119000.00\"\n  },\n  \"payment\": {\n    \"qr\": null,\n    \"isMock\": true\n  },\n  \"invoice\": {\n    \"number\": \"DEMO-NO-FISCAL\",\n    \"cufe\": \"DEMO_NO_VALIDO_ANTE_DIAN\"\n  }\n}"
+            },
+            {
+              "name": "GW_ORDER_RATE_LIMITED",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_ORDER_PENDING"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/orders/DEMO-ORDER-001",
+                "description": "Cambiar x-mock-response-name para representar cada estado. En el backend este GET solo leera la DB; no consultara Factus en cada render. Requiere propiedad/autenticacion de la orden al implementarse."
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Retry-After",
+                  "value": "5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"error\": {\n    \"code\": \"RATE_LIMITED\",\n    \"message\": \"Reintentar despues de Retry-After\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gateway - recibir webhook (solo contrato)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-mock-response-name",
+                "value": "GW_WEBHOOK_ACCEPTED"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{gateway_base}}/api/v1/webhooks/factus-pay?key={{webhook_key}}",
+            "description": "CONTRATO. El webhook real debe validar key en tiempo constante, guardar notificacion y tarea antes de 2xx, y consultar Pay autenticado para confirmar referencia/monto/paid. El ejemplo no demuestra pago y no autoriza facturar. Registrar la URL HTTPS sin ?key en el panel y configurar la llave separadamente; Factus Pay la agrega.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"reference_code\": \"APIW-DEMO-001\",\n    \"amount\": 119000,\n    \"status\": \"paid\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [],
+          "response": [
+            {
+              "name": "GW_WEBHOOK_ACCEPTED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "x-mock-response-name",
+                    "value": "GW_WEBHOOK_ACCEPTED"
+                  }
+                ],
+                "auth": {
+                  "type": "noauth"
+                },
+                "url": "{{gateway_base}}/api/v1/webhooks/factus-pay?key={{webhook_key}}",
+                "description": "CONTRATO. El webhook real debe validar key en tiempo constante, guardar notificacion y tarea antes de 2xx, y consultar Pay autenticado para confirmar referencia/monto/paid. El ejemplo no demuestra pago y no autoriza facturar. Registrar la URL HTTPS sin ?key en el panel y configurar la llave separadamente; Factus Pay la agrega.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"reference_code\": \"APIW-DEMO-001\",\n    \"amount\": 119000,\n    \"status\": \"paid\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"isMock\": true,\n  \"received\": true\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

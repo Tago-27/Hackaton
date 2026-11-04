@@ -1,0 +1,64 @@
+# Render Blueprint: un servicio web (API + página) y una base PostgreSQL.
+# Los valores con `sync: false` se piden en el panel de Render al crear el Blueprint:
+# nunca se escriben aquí.
+
+databases:
+  - name: turismo-musical-db
+    plan: free            # gratis 30 días; luego hay que pasar a un plan pago o recrearla
+    databaseName: turismo_musical
+    user: turismo_musical
+
+services:
+  - type: web
+    name: turismo-musical
+    runtime: docker
+    plan: free            # se duerme tras 15 min sin tráfico (ver docs/DEPLOY_RENDER.md)
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: turismo-musical-db
+          property: connectionString
+
+      # Proveedores
+      - key: EVENTS_PROVIDER
+        value: ticketmaster
+      - key: RATES_PROVIDER
+        value: open_er_api        # cambiar a exchangerate_api cuando la cuenta esté activa
+      - key: PAY_PROVIDER
+        value: factus
+      - key: INVOICE_PROVIDER
+        value: factus
+
+      # Factus Sandbox (URLs públicas, no son secretos)
+      - key: FACTUS_PAY_BASE_URL
+        value: https://pay-api-sandbox.factus.com.co
+      - key: FACTUS_API_BASE_URL
+        value: https://api-sandbox.factus.com.co
+      - key: FACTUS_NUMBERING_RANGE_ID
+        value: "389"
+
+      # Secretos: se piden en el panel
+      - key: TICKETMASTER_API_KEY
+        sync: false
+      - key: FX_API_KEY
+        sync: false
+      - key: FACTUS_PAY_TOKEN
+        sync: false
+      - key: FACTUS_CLIENT_ID
+        sync: false
+      - key: FACTUS_CLIENT_SECRET
+        sync: false
+      - key: FACTUS_USERNAME
+        sync: false
+      - key: FACTUS_PASSWORD
+        sync: false
+      - key: FACTUS_PAY_WEBHOOK_KEY
+        generateValue: true       # Render genera una llave aleatoria
+      - key: SESSION_SECRET
+        generateValue: true       # firma las cookies de sesión del login

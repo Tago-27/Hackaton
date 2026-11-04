@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "body": {
+    "data": {
+      "reference_code": "[REFERENCIA]",
+      "amount": 20000,
+      "status": "ready",
+      "breb_key": "[REDACTADO]",
+      "created_at": "04-11-2026 12:20:07 PM",
+      "qr_expires_at": "04-11-2026 12:35:07 PM",
+      "collected_at": null,
+      "qr": "[REDACTADO]"
+    },
+    "status": "success",
+    "message": "Recaudo encontrado"
+  }
+}

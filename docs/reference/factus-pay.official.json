@@ -1,0 +1,170 @@
+{
+  "id": "42669435-4d145594-9871-4691-b1d4-ba83e93adb68",
+  "name": "factus-pay",
+  "$kind": "collection",
+  "variables": [],
+  "scripts": [],
+  "items": [
+    {
+      "id": "42669435-a9b0cf9c-ea2e-4e72-82b1-710890a7eefa",
+      "name": "Auth",
+      "$kind": "collection",
+      "scripts": [],
+      "items": [
+        {
+          "id": "42669435-4084d186-53cf-4a5d-9c67-d3025976f9f9",
+          "name": "auth",
+          "url": "{{pay_url_sandbox}}/auth",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "X-Factus-Access-Key",
+              "value": "1e3f0c7a-2b5d-4f8e-9b6c-1a2b3c4"
+            },
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "content": "{   \n    \"email\" : \"micorreo@gmail.com\",\n    \"password\": \"1234567\"\n}"
+          },
+          "auth": {
+            "type": "noauth"
+          },
+          "$kind": "http-request",
+          "settings": {},
+          "scripts": [
+            {
+              "type": "afterResponse",
+              "code": "let response = pm.response.json();\npm.environment.set(\"pay_token\", response.token);",
+              "language": "text/javascript"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "42669435-15af63cb-cf83-4ada-9133-2fb8d3730682",
+      "name": "collections",
+      "$kind": "collection",
+      "scripts": [],
+      "items": [
+        {
+          "id": "42669435-e64c646f-cc69-441e-ae71-08d8abf9c9f2",
+          "name": "crear",
+          "url": "{{pay_url_local}}/v1/collections",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "X-Factus-Access-Key",
+              "value": "1e3f0c7a-2b5d-4f8e-9b6c-1a2b3c4",
+              "disabled": true
+            },
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "content": "{   \n    \"reference_code\": \"{{$guid}}\",\n    \n    \"amount\": \"12500\"\n}"
+          },
+          "auth": {
+            "credentials": [
+              {
+                "key": "token",
+                "value": "{{pay_token}}"
+              }
+            ],
+            "type": "bearer"
+          },
+          "$kind": "http-request",
+          "settings": {}
+        },
+        {
+          "id": "42669435-7b6b4e6f-a3f1-4f2d-b3da-b36d5be8b474",
+          "name": "listar",
+          "url": "{{pay_url_sandbox}}/v1/collections?status=&reference_code=",
+          "method": "GET",
+          "headers": [
+            {
+              "key": "X-Factus-Access-Key",
+              "value": "1e3f0c7a-2b5d-4f8e-9b6c-1a2b3c4",
+              "disabled": true
+            },
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "queryParams": [
+            {
+              "key": "status",
+              "value": ""
+            },
+            {
+              "key": "reference_code",
+              "value": ""
+            }
+          ],
+          "body": {
+            "type": "json",
+            "content": ""
+          },
+          "auth": {
+            "credentials": [
+              {
+                "key": "token",
+                "value": "{{pay_token}}"
+              }
+            ],
+            "type": "bearer"
+          },
+          "$kind": "http-request",
+          "settings": {}
+        },
+        {
+          "id": "42669435-b379d121-1235-45d9-824f-740220923455",
+          "name": "ver",
+          "url": "{{pay_url_local}}/v1/collections/:reference_code",
+          "method": "GET",
+          "headers": [
+            {
+              "key": "X-Factus-Access-Key",
+              "value": "1e3f0c7a-2b5d-4f8e-9b6c-1a2b3c4",
+              "disabled": true
+            },
+            {
+              "key": "Accept",
+              "value": "application/json"
+            }
+          ],
+          "pathVariables": [
+            {
+              "key": "reference_code",
+              "value": "01m0jd2zhz46mz7g906yx772vt"
+            }
+          ],
+          "body": {
+            "type": "json",
+            "content": ""
+          },
+          "auth": {
+            "credentials": [
+              {
+                "key": "token",
+                "value": "{{pay_token}}"
+              }
+            ],
+            "type": "bearer"
+          },
+          "$kind": "http-request",
+          "settings": {}
+        }
+      ]
+    }
+  ],
+  "url": "https://go.postman.co/collection/42669435-4d145594-9871-4691-b1d4-ba83e93adb68"
+}

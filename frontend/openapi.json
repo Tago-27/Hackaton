@@ -1,0 +1,2072 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Turismo Musical API",
+  "version": "0.2.0"
+ },
+ "paths": {
+  "/health": {
+   "get": {
+    "summary": "Health",
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "type": "object",
+         "title": "Response Health Health Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/register": {
+   "post": {
+    "summary": "Register",
+    "operationId": "register_api_v1_auth_register_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Unprocessable Entity",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/login": {
+   "post": {
+    "summary": "Login",
+    "operationId": "login_api_v1_auth_login_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Unprocessable Entity",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/auth/logout": {
+   "post": {
+    "summary": "Logout",
+    "operationId": "logout_api_v1_auth_logout_post",
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     }
+    }
+   }
+  },
+  "/api/v1/auth/me": {
+   "get": {
+    "summary": "Me",
+    "operationId": "me_api_v1_auth_me_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UserOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Unprocessable Entity",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/config": {
+   "get": {
+    "summary": "Config",
+    "operationId": "config_api_v1_config_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ConfigOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Unprocessable Entity",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/events": {
+   "get": {
+    "summary": "Search Events",
+    "operationId": "search_events_api_v1_events_get",
+    "parameters": [
+     {
+      "name": "artist",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 100
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Artist"
+      }
+     },
+     {
+      "name": "city",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 100
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "City"
+      }
+     },
+     {
+      "name": "country",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "pattern": "^[A-Za-z]{2}$"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Country"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EventSearchOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/events/{event_id}": {
+   "get": {
+    "summary": "Get Event",
+    "operationId": "get_event_api_v1_events__event_id__get",
+    "parameters": [
+     {
+      "name": "event_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Event Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EventOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/quotes": {
+   "post": {
+    "summary": "Quote",
+    "operationId": "quote_api_v1_quotes_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/QuoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/QuoteOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Unprocessable Entity",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/orders": {
+   "get": {
+    "summary": "My Orders",
+    "operationId": "my_orders_api_v1_orders_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/OrderOut"
+         },
+         "title": "Response My Orders Api V1 Orders Get"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   },
+   "post": {
+    "summary": "Create Order",
+    "operationId": "create_order_api_v1_orders_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 8,
+       "maxLength": 100,
+       "title": "Idempotency-Key"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrderIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrderOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/orders/{order_id}": {
+   "get": {
+    "summary": "Get Order",
+    "operationId": "get_order_api_v1_orders__order_id__get",
+    "parameters": [
+     {
+      "name": "order_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Order Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrderOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/orders/{order_id}/retry-payment": {
+   "post": {
+    "summary": "Retry Payment",
+    "description": "Reintenta el pago de una orden fallida o vencida, sin crear otra orden.",
+    "operationId": "retry_payment_api_v1_orders__order_id__retry_payment_post",
+    "parameters": [
+     {
+      "name": "order_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Order Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrderOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Conflict"
+     }
+    }
+   }
+  },
+  "/api/v1/orders/{order_id}/retry-invoice": {
+   "post": {
+    "summary": "Retry Invoice",
+    "operationId": "retry_invoice_api_v1_orders__order_id__retry_invoice_post",
+    "parameters": [
+     {
+      "name": "order_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Order Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrderOut"
+        }
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/orders/{order_id}/invoice": {
+   "get": {
+    "summary": "Download Invoice",
+    "operationId": "download_invoice_api_v1_orders__order_id__invoice_get",
+    "parameters": [
+     {
+      "name": "order_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Order Id"
+      }
+     },
+     {
+      "name": "format",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "pdf",
+        "xml"
+       ],
+       "type": "string",
+       "default": "pdf",
+       "title": "Format"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Conflict"
+     }
+    }
+   }
+  },
+  "/api/v1/orders/{order_id}/ticket": {
+   "get": {
+    "summary": "Download Ticket",
+    "operationId": "download_ticket_api_v1_orders__order_id__ticket_get",
+    "parameters": [
+     {
+      "name": "order_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Order Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Unprocessable Entity"
+     },
+     "502": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorOut"
+        }
+       }
+      },
+      "description": "Bad Gateway"
+     }
+    }
+   }
+  },
+  "/api/v1/webhooks/factus-pay": {
+   "post": {
+    "summary": "Factus Pay Webhook",
+    "operationId": "factus_pay_webhook_api_v1_webhooks_factus_pay_post",
+    "parameters": [
+     {
+      "name": "key",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 200
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Key"
+      }
+     },
+     {
+      "name": "X-Webhook-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Webhook-Key"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Factus Pay Webhook Api V1 Webhooks Factus Pay Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "ConfigOut": {
+    "properties": {
+     "document_types": {
+      "items": {
+       "$ref": "#/components/schemas/DocumentTypeOut"
+      },
+      "type": "array",
+      "title": "Document Types"
+     },
+     "municipalities": {
+      "items": {
+       "$ref": "#/components/schemas/MunicipalityOut"
+      },
+      "type": "array",
+      "title": "Municipalities"
+     },
+     "min_cop": {
+      "type": "string",
+      "title": "Min Cop"
+     },
+     "max_cop": {
+      "type": "string",
+      "title": "Max Cop"
+     },
+     "disclaimer": {
+      "type": "string",
+      "title": "Disclaimer"
+     },
+     "fake_payments": {
+      "type": "boolean",
+      "title": "Fake Payments"
+     }
+    },
+    "type": "object",
+    "required": [
+     "document_types",
+     "municipalities",
+     "min_cop",
+     "max_cop",
+     "disclaimer",
+     "fake_payments"
+    ],
+    "title": "ConfigOut"
+   },
+   "CustomerIn": {
+    "properties": {
+     "doc_type": {
+      "type": "string",
+      "title": "Doc Type"
+     },
+     "doc_number": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 3,
+      "title": "Doc Number"
+     },
+     "names": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Names"
+     },
+     "email": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "title": "Email"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "country": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^[A-Z]{2}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Country"
+     },
+     "municipality": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^\\d{5}$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Municipality",
+      "description": "Código DANE del municipio. Obligatorio si country es CO."
+     }
+    },
+    "type": "object",
+    "required": [
+     "doc_type",
+     "doc_number",
+     "names",
+     "email"
+    ],
+    "title": "CustomerIn"
+   },
+   "DocumentTypeOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "pattern": {
+      "type": "string",
+      "title": "Pattern"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "label",
+     "pattern"
+    ],
+    "title": "DocumentTypeOut"
+   },
+   "ErrorOut": {
+    "properties": {
+     "detail": {
+      "type": "string",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "required": [
+     "detail"
+    ],
+    "title": "ErrorOut"
+   },
+   "EventOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "artist": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Artist"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "country": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Country"
+     },
+     "venue": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Venue"
+     },
+     "date": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date"
+     },
+     "image_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Image Url"
+     },
+     "original_price": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Original Price"
+     },
+     "original_currency": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Original Currency"
+     },
+     "is_demo_price": {
+      "type": "boolean",
+      "title": "Is Demo Price",
+      "description": "True: el precio cobrable sale del catálogo de la demo. original_price es solo orientativo (Ticketmaster no vende boletos a través de Discovery)."
+     },
+     "unit_price_cop": {
+      "type": "string",
+      "title": "Unit Price Cop",
+      "description": "Precio de la localidad General (desde)."
+     },
+     "display_prices": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "propertyNames": {
+       "enum": [
+        "USD",
+        "EUR",
+        "COP",
+        "GBP",
+        "JPY"
+       ]
+      },
+      "type": "object",
+      "title": "Display Prices"
+     },
+     "tiers": {
+      "items": {
+       "$ref": "#/components/schemas/TierOut"
+      },
+      "type": "array",
+      "title": "Tiers"
+     },
+     "rates": {
+      "$ref": "#/components/schemas/RatesInfo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "artist",
+     "city",
+     "country",
+     "venue",
+     "date",
+     "image_url",
+     "original_price",
+     "original_currency",
+     "is_demo_price",
+     "unit_price_cop",
+     "display_prices",
+     "tiers",
+     "rates"
+    ],
+    "title": "EventOut"
+   },
+   "EventSearchOut": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/EventOut"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "EventSearchOut"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "InvoiceOut": {
+    "properties": {
+     "number": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Number"
+     },
+     "cufe": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cufe"
+     },
+     "public_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Public Url"
+     },
+     "available": {
+      "type": "boolean",
+      "title": "Available"
+     }
+    },
+    "type": "object",
+    "required": [
+     "number",
+     "cufe",
+     "public_url",
+     "available"
+    ],
+    "title": "InvoiceOut"
+   },
+   "LoginIn": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 128,
+      "title": "Password"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "password"
+    ],
+    "title": "LoginIn"
+   },
+   "MunicipalityOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "name"
+    ],
+    "title": "MunicipalityOut"
+   },
+   "OrderIn": {
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Event Id"
+     },
+     "quantity": {
+      "type": "integer",
+      "maximum": 10.0,
+      "minimum": 1.0,
+      "title": "Quantity"
+     },
+     "tier": {
+      "type": "string",
+      "enum": [
+       "general",
+       "preferencial",
+       "vip"
+      ],
+      "title": "Tier",
+      "default": "general"
+     },
+     "customer": {
+      "$ref": "#/components/schemas/CustomerIn"
+     },
+     "data_consent": {
+      "type": "boolean",
+      "const": true,
+      "title": "Data Consent",
+      "description": "El comprador autoriza el tratamiento de sus datos personales."
+     }
+    },
+    "type": "object",
+    "required": [
+     "event_id",
+     "quantity",
+     "customer",
+     "data_consent"
+    ],
+    "title": "OrderIn"
+   },
+   "OrderOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "reference_code": {
+      "type": "string",
+      "title": "Reference Code"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "created",
+       "awaiting_payment",
+       "paid",
+       "invoicing",
+       "completed",
+       "payment_expired",
+       "payment_failed",
+       "invoice_failed"
+      ],
+      "title": "Status"
+     },
+     "event_id": {
+      "type": "string",
+      "title": "Event Id"
+     },
+     "event_name": {
+      "type": "string",
+      "title": "Event Name"
+     },
+     "event_date": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Event Date"
+     },
+     "event_venue": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Event Venue"
+     },
+     "event_city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Event City"
+     },
+     "quantity": {
+      "type": "integer",
+      "title": "Quantity"
+     },
+     "ticket_tier": {
+      "type": "string",
+      "title": "Ticket Tier",
+      "description": "Nombre de la localidad (General, Preferencial, VIP)."
+     },
+     "total_cop": {
+      "type": "string",
+      "title": "Total Cop"
+     },
+     "customer_names": {
+      "type": "string",
+      "title": "Customer Names"
+     },
+     "payment": {
+      "$ref": "#/components/schemas/PaymentOut"
+     },
+     "invoice": {
+      "$ref": "#/components/schemas/InvoiceOut"
+     },
+     "tickets": {
+      "items": {
+       "$ref": "#/components/schemas/TicketOut"
+      },
+      "type": "array",
+      "title": "Tickets"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "disclaimer": {
+      "type": "string",
+      "title": "Disclaimer"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "reference_code",
+     "status",
+     "event_id",
+     "event_name",
+     "event_date",
+     "event_venue",
+     "event_city",
+     "quantity",
+     "ticket_tier",
+     "total_cop",
+     "customer_names",
+     "payment",
+     "invoice",
+     "tickets",
+     "error",
+     "disclaimer",
+     "created_at"
+    ],
+    "title": "OrderOut"
+   },
+   "PaymentOut": {
+    "properties": {
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "qr": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Qr"
+     },
+     "breb_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Breb Key"
+     },
+     "expires_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "qr",
+     "breb_key",
+     "expires_at"
+    ],
+    "title": "PaymentOut"
+   },
+   "QuoteIn": {
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Event Id"
+     },
+     "quantity": {
+      "type": "integer",
+      "maximum": 10.0,
+      "minimum": 1.0,
+      "title": "Quantity"
+     },
+     "tier": {
+      "type": "string",
+      "enum": [
+       "general",
+       "preferencial",
+       "vip"
+      ],
+      "title": "Tier",
+      "default": "general"
+     }
+    },
+    "type": "object",
+    "required": [
+     "event_id",
+     "quantity"
+    ],
+    "title": "QuoteIn"
+   },
+   "QuoteOut": {
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "title": "Event Id"
+     },
+     "quantity": {
+      "type": "integer",
+      "title": "Quantity"
+     },
+     "charge_currency": {
+      "type": "string",
+      "const": "COP",
+      "title": "Charge Currency",
+      "default": "COP"
+     },
+     "tier": {
+      "type": "string",
+      "enum": [
+       "general",
+       "preferencial",
+       "vip"
+      ],
+      "title": "Tier"
+     },
+     "tier_label": {
+      "type": "string",
+      "title": "Tier Label"
+     },
+     "unit_price_cop": {
+      "type": "string",
+      "title": "Unit Price Cop"
+     },
+     "total_cop": {
+      "type": "string",
+      "title": "Total Cop"
+     },
+     "references": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "propertyNames": {
+       "enum": [
+        "USD",
+        "EUR",
+        "COP",
+        "GBP",
+        "JPY"
+       ]
+      },
+      "type": "object",
+      "title": "References"
+     },
+     "rates": {
+      "$ref": "#/components/schemas/RatesInfo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "event_id",
+     "quantity",
+     "tier",
+     "tier_label",
+     "unit_price_cop",
+     "total_cop",
+     "references",
+     "rates"
+    ],
+    "title": "QuoteOut"
+   },
+   "RatesInfo": {
+    "properties": {
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     },
+     "next_update_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Next Update At"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note",
+      "default": "Valores en USD, EUR, GBP y JPY son referenciales. El cobro es en COP."
+     }
+    },
+    "type": "object",
+    "required": [
+     "updated_at",
+     "next_update_at"
+    ],
+    "title": "RatesInfo"
+   },
+   "RegisterIn": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Name"
+     },
+     "email": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "title": "Email"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 128,
+      "minLength": 8,
+      "title": "Password"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "email",
+     "password"
+    ],
+    "title": "RegisterIn"
+   },
+   "TicketOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "description": "Código único del boleto: <referencia>-<n>"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "of": {
+      "type": "integer",
+      "title": "Of"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "number",
+     "of"
+    ],
+    "title": "TicketOut"
+   },
+   "TierOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "enum": [
+       "general",
+       "preferencial",
+       "vip"
+      ],
+      "title": "Code"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "unit_price_cop": {
+      "type": "string",
+      "title": "Unit Price Cop"
+     },
+     "display_prices": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "propertyNames": {
+       "enum": [
+        "USD",
+        "EUR",
+        "COP",
+        "GBP",
+        "JPY"
+       ]
+      },
+      "type": "object",
+      "title": "Display Prices"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "label",
+     "unit_price_cop",
+     "display_prices"
+    ],
+    "title": "TierOut"
+   },
+   "UserOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "email": {
+      "type": "string",
+      "title": "Email"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "email"
+    ],
+    "title": "UserOut"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   }
+  }
+ }
+}

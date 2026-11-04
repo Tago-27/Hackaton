@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/*
+ * Estilo inspirado en una plantilla formal de música de cámara: títulos condensados en
+ * mayúsculas, esquinas rectas, líneas finas y mucho aire. Paleta del proyecto:
+ * blanco, azul pastel y azul oscuro.
+ */
+@theme {
+  --color-ink: #ffffff; /* fondo de página y campos */
+  --color-panel: #f4f8fd; /* superficies suaves */
+  --color-pastel: #dbeafe; /* azul pastel */
+  --color-pastel-strong: #bfdbfe;
+  --color-line: #d5e2f0;
+  --color-muted: #5a6a80;
+  --color-navy: #0f2340; /* texto principal */
+  --color-brand: #13294b; /* azul oscuro: portada, botones, pie */
+  --color-brand-mid: #2f5f9e; /* acentos legibles sobre blanco */
+  --color-brand-2: #a9cdf5; /* azul pastel de acento sobre oscuro */
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+  --color-bad: #b91c1c;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "League Gothic", "Anton", "Oswald", Impact, sans-serif;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-navy);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Títulos al estilo de la plantilla: condensados, en mayúsculas, sin negrita sintética. */
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis-weight: none;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+/* Etiqueta pequeña en mayúsculas espaciadas (subtítulos, navegación). */
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-mid);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
